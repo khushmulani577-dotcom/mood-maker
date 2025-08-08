@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Bubble Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+            min-height: 100vh;
+            margin: 0;
+            position: relative;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: float linear infinite;
+            filter: blur(1px);
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.8);
+            transform-origin: center;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        .pulse {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .mood-selector {
+            transition: all 0.3s ease;
+        }
+
+        .mood-selector:hover {
+            transform: translateY(-5px);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-12 relative z-10">
+        <header class="text-center mb-16">
+            <h1 class="text-5xl font-light text-indigo-800 mb-4">Mood Bubble Generator</h1>
+            <p class="text-lg text-indigo-600 max-w-2xl mx-auto">Select your current mood and watch as calming bubbles fill your screen with matching colors and music</p>
+        </header>
+
+        <div class="flex flex-wrap justify-center gap-6 mb-16">
+            <!-- Happy Mood -->
+            <div class="mood-selector glass-effect p-6 w-40 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg" 
+                 data-mood="happy" data-color="#FFD6E0" data-song="happy.mp3">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-pink-100 flex items-center justify-center text-4xl mb-3">
+                        😊
+                    </div>
+                    <h3 class="font-semibold text-pink-700">Happy</h3>
+                </div>
+            </div>
+
+            <!-- Other Mood Selectors -->
+            <div class="mood-selector glass-effect p-6 w-40 cursor-pointer" 
+                 data-mood="calm" data-color="#C1E7FF" data-song="calm.mp3">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-blue-100 flex items-center justify-center text-4xl mb-3">
+                        🧘
+                    </div>
+                    <h3 class="font-semibold text-blue-700">Calm</h3>
+                </div>
+            </div>
+
+            <div class="mood-selector glass-effect p-6 w-40 cursor-pointer" 
+                 data-mood="sleepy" data-color="#E2D1F9" data-song="sleepy.mp3">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-purple-100 flex items-center justify-center text-4xl mb-3">
+                        😴
+                    </div>
+                    <h3 class="font-semibold text-purple-700">Sleepy</h3>
+                </div>
+            </div>
+
+            <div class="mood-selector glass-effect p-6 w-40 cursor-pointer" 
+                 data-mood="energetic" data-color="#FFF9C4" data-song="energetic.mp3">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-yellow-100 flex items-center justify-center text-4xl mb-3">
+                        ⚡
+                    </div>
+                    <h3 class="font-semibold text-yellow-700">Energetic</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button id="generateBtn" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                Generate Bubbles
+            </button>
+        </div>
+    </div>
+
+    <audio id="backgroundMusic" loop>
+        <source src="" type="audio/mpeg">
+    </audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const moodSelectors = document.querySelectorAll('.mood-selector');
+            const generateBtn = document.getElementById('generateBtn');
+            const backgroundMusic = document.getElementById('backgroundMusic');
+            let selectedMood = null;
+            let bubbles = [];
+
+            // Mood selection
+            moodSelectors.forEach(selector => {
+                selector.addEventListener('click', function() {
+                    moodSelectors.forEach(s => s.classList.remove('ring-2', 'ring-indigo-500', 'pulse'));
+                    this.classList.add('ring-2', 'ring-indigo-500', 'pulse');
+                    selectedMood = {
+                        name: this.dataset.mood,
+                        color: this.dataset.color,
+                        song: this.dataset.song
+                    };
+                    
+                    // Play mood music with fade-in animation
+                    backgroundMusic.src = this.dataset.song;
+                    backgroundMusic.volume = 0;
+                    backgroundMusic.play().then(() => {
+                        // Fade in volume
+                        let fadeAudio = setInterval(() => {
+                            if (backgroundMusic.volume < 0.8) {
+                                backgroundMusic.volume += 0.05;
+                            } else {
+                                clearInterval(fadeAudio);
+                            }
+                        }, 100);
+                    }).catch(e => {
+                        console.log('Autoplay prevented. Use play button to start music.');
+                    });
+                });
+            });
+
+            // Generate bubbles
+            generateBtn.addEventListener('click', function() {
+                if (!selectedMood) {
+                    alert('Please select a mood first!');
+                    return;
+                }
+
+                // Clear existing bubbles
+                bubbles.forEach(bubble => {
+                    if (bubble.element && bubble.element.parentNode) {
+                        bubble.element.parentNode.removeChild(bubble.element);
+                    }
+                });
+                bubbles = [];
+
+                // Play music
+                backgroundMusic.src = selectedMood.song;
+                backgroundMusic.play().catch(e => {
+                    console.log('Autoplay prevented. Use play button to start music.');
+                });
+
+                // Generate bubbles
+                for (let i = 0; i < 30; i++) {
+                    createBubble(selectedMood.color);
+                }
+            });
+
+            function createBubble(color) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                const size = Math.random() * 100 + 50;
+                const duration = Math.random() * 20 + 10;
+                
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.background = `radial-gradient(circle at 30% 30%, white, ${color})`;
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.top = `${Math.random() * 100}%`;
+                bubble.style.animationDuration = `${duration}s`;
+                
+                document.body.appendChild(bubble);
+                
+                bubbles.push({
+                    element: bubble,
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    vx: Math.random() * 2 - 1,
+                    vy: Math.random() * 2 - 1
+                });
+            }
+
+            // Move bubbles slightly for more organic motion
+            function animateBubbles() {
+                bubbles.forEach(bubble => {
+                    bubble.x += bubble.vx;
+                    bubble.y += bubble.vy;
+                    
+                    // Bounce off walls
+                    if (bubble.x <= 0 || bubble.x >= window.innerWidth - bubble.element.offsetWidth) {
+                        bubble.vx *= -1;
+                    }
+                    if (bubble.y <= 0 || bubble.y >= window.innerHeight - bubble.element.offsetHeight) {
+                        bubble.vy *= -1;
+                    }
+                    
+                    bubble.element.style.left = `${bubble.x}px`;
+                    bubble.element.style.top = `${bubble.y}px`;
+                });
+                
+                requestAnimationFrame(animateBubbles);
+            }
+            
+            animateBubbles();
+        });
+    </script>
+</body>
+</html>
